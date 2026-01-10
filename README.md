@@ -1,25 +1,24 @@
 # file-indexer
 
-A Go program that indexes local files and then exposes the index for querying through a simple HTTP API. You just pass in a search term and get back a list of "hits" (file name, line number, line text). 
+Search your files by keyword. We'll load the files into a search index and then expose them via HTTP. Users will see a search bar that forwards their queries to our HTTP server.
+
+Disclaimer - this project is for learning Go and probably won't be a showcase of best practices
 
 Simple roadmap:
-1. Create HTTP server
+1. Create server
     - expose endpoint: GET search/query/{query}
 	- server lives in a daemon thread you either:
 		1. launch manually
 		2. launch automatically on startup (probably less portable, more config)
-2. Index impl
-    - take files or directories as input (cmd-line args?)
-    - iterate through the file list indexing them line-by-line
+2. Implement Index
+    - take file names as input (cmd-line arg)
+    - iterate through the files indexing them line-by-line
 	- storage options:
-		1. brute-force (keyword->line Map)
+		1. In memory (e.g. Map)
 		2. Bleve index
 		3. SQLite
 3. Machine learning
-    - it would be cool to search files by fuzzy concepts like "tone"
-    - this would pair well with story scripts, business emails, etc.
+    - would be cool to search files by fuzzy concepts like "tone"
+    - this would pair well with story scripts and other creative stuff
 	- HTTP: GET search/mood/{mood}
-        - "character_name" and other narrowing filters as query parameters
-
-
-This is just for fun; I have no idea what I'm doing ;)
+        - character names (and other narrowing filters) as query parameters
