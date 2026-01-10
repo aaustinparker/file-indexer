@@ -11,16 +11,17 @@ import (
 	"github.com/blevesearch/bleve/v2"
 )
 
-func CreateIndexHandler(w http.ResponseWriter, r *http.Request) {
-	// delete old index
-	if err := deleteIndex("example.bleve"); err != nil {
-		log.Printf("Error deleting existing index: %v", err)
-		return
+func (h *HttpHandler) CreateIndex(w http.ResponseWriter, r *http.Request) {
+	// delete old index if needed
+	if h.DeleteExisting {
+		if err := deleteIndex(h.IndexName); err != nil {
+			log.Printf("No existing index to delete")
+		}
 	}
 
 	// create a new index
 	mapping := bleve.NewIndexMapping()
-	index, err := bleve.New("example.bleve", mapping)
+	index, err := bleve.New(h.IndexName, mapping)
 	if err != nil {
 		log.Printf("Error creating new index: %v", err)
 		return
@@ -28,7 +29,8 @@ func CreateIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer index.Close()
 
-	dirEntries, err := os.ReadDir(".")
+	// iterate through files in the data directory
+	dirEntries, err := os.ReadDir(h.DataDir)
 	if err != nil {
 		log.Printf("Error reading the data directory: %v", err)
 		return
@@ -41,7 +43,6 @@ func CreateIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err := indexFile(index, file.Name()); err != nil {
 			log.Printf("%v", err)
-			// more handling if needed
 		}
 	}
 }

@@ -9,9 +9,9 @@ import (
 	"github.com/blevesearch/bleve/v2"
 )
 
-func SearchIndexHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HttpHandler) SearchIndex(w http.ResponseWriter, r *http.Request) {
 	// open the index
-	index, err := bleve.Open("example.bleve")
+	index, err := bleve.Open(h.IndexName)
 	if err != nil {
 		log.Printf("Error opening index: %v", err)
 		return
