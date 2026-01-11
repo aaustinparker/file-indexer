@@ -4,39 +4,40 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/blevesearch/bleve/v2"
 )
 
-func (h *HttpHandler) CreateIndex(w http.ResponseWriter, r *http.Request) {
-	// delete old index if needed
-	if h.DeleteExisting {
-		if err := deleteIndex(h.IndexName); err != nil {
-			log.Printf("No existing index to delete")
-		}
+func (h *HttpHandler) CreateIndex() {
+	// delete old index
+	index, err := bleve.Open(h.IndexName)
+	if err == nil {
+		log.Printf("Deleting old index")
+		index.Close()
+		os.RemoveAll(h.IndexName)
 	}
 
-	// create a new index
+	// create new index
 	mapping := bleve.NewIndexMapping()
-	index, err := bleve.New(h.IndexName, mapping)
+	index, err = bleve.New(h.IndexName, mapping)
 	if err != nil {
 		log.Printf("Error creating new index: %v", err)
 		return
 	}
 
+	log.Printf("New index created at %s", h.IndexName)
 	defer index.Close()
 
 	// iterate through files in the data directory
-	dirEntries, err := os.ReadDir(h.DataDir)
+	files, err := os.ReadDir(h.DataDir)
 	if err != nil {
 		log.Printf("Error reading the data directory: %v", err)
 		return
 	}
 
-	for _, file := range dirEntries {
+	for _, file := range files {
 		if file.Type().IsDir() || filepath.Ext(file.Name()) != ".txt" {
 			continue
 		}
@@ -85,15 +86,4 @@ func indexDocument(index bleve.Index, fileName string, lineNumber int, text stri
 	documentId := fmt.Sprintf("%s_%d", document.FileName, document.LineNumber)
 	return index.Index(documentId, document)
 
-}
-
-func deleteIndex(path string) error {
-	idx, err := bleve.Open(path)
-	if err != nil {
-		return err
-	}
-	if err := idx.Close(); err != nil {
-		return err
-	}
-	return os.RemoveAll(path)
 }

@@ -10,10 +10,9 @@ import (
 
 // TODO - uncomment and figure out how to inject configs in other files
 var (
-	port           = flag.String("port", ":8080", "Port to listen on")
-	dataDir        = flag.String("dataDir", "data", "Source directory for files")
-	indexName      = flag.String("indexName", "index.bleve", "Name of the search index")
-	deleteExisting = flag.Bool("deleteExisting", true, "Whether to delete the existing index on server start")
+	port      = flag.String("port", ":8080", "Port to listen on")
+	dataDir   = flag.String("dataDir", "data", "Source directory for files")
+	indexName = flag.String("indexName", "index.bleve", "Name of the search index")
 )
 
 func main() {
@@ -22,13 +21,13 @@ func main() {
 
 	// create httpHandler with injected dependencies
 	httpHandler := &index.HttpHandler{
-		DataDir:        *dataDir,
-		IndexName:      *indexName,
-		DeleteExisting: *deleteExisting,
+		DataDir:   *dataDir,
+		IndexName: *indexName,
 	}
 
-	// define handlers for each route
-	http.HandleFunc("/create", httpHandler.CreateIndex)
+	httpHandler.CreateIndex()
+
+	// set up handlers for each route
 	http.HandleFunc("/search", httpHandler.SearchIndex)
 
 	// start the server
