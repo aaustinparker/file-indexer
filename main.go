@@ -19,15 +19,17 @@ func main() {
 	// parse command line flags
 	flag.Parse()
 
-	// create httpHandler with injected dependencies
+	// create httpHandler with injected configs
 	httpHandler := &index.HttpHandler{
 		DataDir:   *dataDir,
 		IndexName: *indexName,
 	}
 
+	// create index at startup
 	httpHandler.CreateIndex()
 
-	// set up handlers for each route
+	// create hooks for each server route
+	http.HandleFunc("/", httpHandler.Home)
 	http.HandleFunc("/search", httpHandler.SearchIndex)
 
 	// start the server

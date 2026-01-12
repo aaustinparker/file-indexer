@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head><title>File Indexer</title></head>
+    <body>
+        <h2>Search by keyword</h2>
+        <input type="text" id="searchInput" placeholder="Enter search term"/>
+        <button onclick="goToSearch()">Go to Search Page</button>
+    </body>
+
+    <script>
+        function goToSearch() {
+            let searchTerm = document.getElementById("searchInput").value;
+            window.location.href = "/search?q=" + encodeURIComponent(searchTerm);
+        }
+    </script>
+
+</html>
