@@ -3,25 +3,21 @@ package index
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/blevesearch/bleve/v2"
 )
 
-func (h *HttpHandler) SearchIndex(w http.ResponseWriter, r *http.Request) {
+func Search(indexName string, searchTerm string) (string, error) {
 	// get search term from query params
-	searchTerm := r.URL.Query().Get("q")
 	if strings.TrimSpace(searchTerm) == "" {
-		http.Error(w, "Query parameter 'q' is required", http.StatusBadRequest)
-		return
+		return "", fmt.Errorf("Query parameter 'q' is required")
 	}
 
 	// open the index
-	index, err := bleve.Open(h.IndexName)
+	index, err := bleve.Open(indexName)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error opening index: %v", err), http.StatusInternalServerError)
-		return
+		return "", fmt.Errorf("Error opening index %s: %v", indexName, err)
 	}
 	defer index.Close()
 
@@ -32,18 +28,16 @@ func (h *HttpHandler) SearchIndex(w http.ResponseWriter, r *http.Request) {
 	searchRequest.Fields = []string{"*"}
 	searchResults, err := index.Search(searchRequest)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error searching index for results: %v", err), http.StatusInternalServerError)
-		return
+		return "", fmt.Errorf("Error searching index for results: %v", err)
 	}
 
 	parsedDocuments := parseDocument(searchResults)
 	json, err := json.Marshal(parsedDocuments)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("JSON error: %v", err), http.StatusInternalServerError)
-		return
+		return "", fmt.Errorf("JSON parsing error: %v", err)
 	}
 
-	fmt.Fprintf(w, "%s", string(json))
+	return string(json), nil
 }
 
 func parseDocument(searchResults *bleve.SearchResult) []Document {

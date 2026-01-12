@@ -10,28 +10,28 @@ import (
 	"github.com/blevesearch/bleve/v2"
 )
 
-func (h *HttpHandler) CreateIndex() {
+func Create(indexName string, dataDir string) {
 	// delete old index
-	index, err := bleve.Open(h.IndexName)
+	index, err := bleve.Open(indexName)
 	if err == nil {
 		log.Printf("Deleting old index")
 		index.Close()
-		os.RemoveAll(h.IndexName)
+		os.RemoveAll(indexName)
 	}
 
 	// create new index
 	mapping := bleve.NewIndexMapping()
-	index, err = bleve.New(h.IndexName, mapping)
+	index, err = bleve.New(indexName, mapping)
 	if err != nil {
 		log.Printf("Error creating new index: %v", err)
 		return
 	}
 
-	log.Printf("New index created at %s", h.IndexName)
+	log.Printf("New index created at %s", indexName)
 	defer index.Close()
 
 	// iterate through files in the data directory
-	files, err := os.ReadDir(h.DataDir)
+	files, err := os.ReadDir(dataDir)
 	if err != nil {
 		log.Printf("Error reading the data directory: %v", err)
 		return
