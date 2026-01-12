@@ -27,6 +27,7 @@ func main() {
 	// create handlers for each route
 	http.HandleFunc("/", renderPage)
 	http.HandleFunc("/search", searchIndex)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	// start the server
 	log.Printf("Listening on %s", *port)
@@ -44,7 +45,7 @@ func searchIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderPage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("resource/search.html")
+	tmpl, err := template.ParseFiles("static/search.html")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to prepare page: %v", err), http.StatusInternalServerError)
 		return
