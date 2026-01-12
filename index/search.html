@@ -2,15 +2,26 @@
 <html>
     <head><title>File Indexer</title></head>
     <body>
-        <h2>Search by keyword</h2>
-        <input type="text" id="searchInput" placeholder="Enter search term"/>
-        <button onclick="goToSearch()">Go to Search Page</button>
+        <h2>Search directory {{.DirectoryPath}}</h2>
+        <input type="text" id="search-input" placeholder="Enter search term"/>
+        <button onclick="search()">Search</button>
+        <ul id="result-list"></ul>
     </body>
 
     <script>
-        function goToSearch() {
-            let searchTerm = document.getElementById("searchInput").value;
-            window.location.href = "/search?q=" + encodeURIComponent(searchTerm);
+        async function search() {
+            const searchTerm = document.getElementById("search-input").value;
+            const searchUrl = "/search?q=" + encodeURIComponent(searchTerm);
+            fetch(searchUrl).then(response => response.json()).then(results => {
+                const resultContainer = document.getElementById("result-list");
+                resultContainer.innerHTML = "";
+                results.forEach(result => {
+                    console.log(result);
+                    const listItem = document.createElement("li");
+                    listItem.textContent = `File: ${result.FileName}, Line: ${result.LineNumber}, Text: ${result.Text}`;
+                    resultContainer.appendChild(listItem);
+                });
+            });
         }
     </script>
 

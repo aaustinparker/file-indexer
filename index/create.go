@@ -73,11 +73,7 @@ func indexFile(index bleve.Index, fileName string) error {
 }
 
 func indexDocument(index bleve.Index, fileName string, lineNumber int, text string) error {
-	document := struct {
-		FileName   string
-		LineNumber int
-		Text       string
-	}{
+	document := &Document{
 		FileName:   fileName,
 		LineNumber: lineNumber,
 		Text:       text,

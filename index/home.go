@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"path/filepath"
 )
 
 func (h *HttpHandler) Home(w http.ResponseWriter, r *http.Request) {
@@ -13,6 +14,14 @@ func (h *HttpHandler) Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// pass some values to the HTML template
+	directoryPath, _ := filepath.Abs(h.DataDir)
+	templateValues := struct {
+		DirectoryPath string
+	}{
+		DirectoryPath: directoryPath,
+	}
+
 	w.Header().Set("Content-Type", "text/html")
-	tmpl.Execute(w, nil)
+	tmpl.Execute(w, templateValues)
 }

@@ -1,8 +1,8 @@
 package index
 
 import (
+	"encoding/json"
 	"fmt"
-	"html"
 	"net/http"
 	"strings"
 
@@ -25,15 +25,36 @@ func (h *HttpHandler) SearchIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	defer index.Close()
 
-	// search for some text
+	// perform search
 	query := bleve.NewWildcardQuery(fmt.Sprintf("*%s*", searchTerm))
 	query.FieldVal = "Text"
-	search := bleve.NewSearchRequest(query)
-	searchResults, err := index.Search(search)
+	searchRequest := bleve.NewSearchRequest(query)
+	searchRequest.Fields = []string{"*"}
+	searchResults, err := index.Search(searchRequest)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error searching index for results: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Fprintf(w, "Found, %q", html.EscapeString(searchResults.String()))
+	parsedDocuments := parseDocument(searchResults)
+	json, err := json.Marshal(parsedDocuments)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("JSON error: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "%s", string(json))
+}
+
+func parseDocument(searchResults *bleve.SearchResult) []Document {
+	parsedDocuments := []Document{}
+	for _, result := range searchResults.Hits {
+		doc := Document{
+			FileName:   result.Fields["FileName"].(string),
+			LineNumber: int(result.Fields["LineNumber"].(float64)),
+			Text:       result.Fields["Text"].(string),
+		}
+		parsedDocuments = append(parsedDocuments, doc)
+	}
+	return parsedDocuments
 }
