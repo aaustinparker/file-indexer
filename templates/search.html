@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>File Indexer</title>
+        <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    </head>
+    <body>
+        <h2>Search directory {{.DirectoryPath}}</h2>
+        <input type="text" id="search-input" placeholder="Enter search term" onkeydown="searchOnEnter(event)"/>
+        <button onclick="search()">Search</button>
+        <ul id="search-container"></ul>
+        <div id="file-container"></div>
+    </body>
+
+    <script>
+        function search() {
+            const searchTerm = document.getElementById("search-input").value;
+            const searchUrl = "/search?q=" + encodeURIComponent(searchTerm);
+            fetch(searchUrl).then(response => response.json()).then(results => {
+                const resultContainer = document.getElementById("search-container");
+                resultContainer.innerHTML = "";
+                results.forEach(result => {
+                    const listItem = document.createElement("li");
+                    
+                    const lineDescriptor = document.createElement("span");
+                    lineDescriptor.innerHTML = 
+                        `<a 
+                            href="#"
+                            onClick="fetchFile(event, '${result.FileName}', ${result.LineNumber})">
+                            ${result.FileName}:${result.LineNumber}
+                        </a>`;
+                    listItem.appendChild(lineDescriptor);
+
+                    const lineText = document.createElement("span");
+                    lineText.textContent = ` - ${result.Text}`;
+                    listItem.appendChild(lineText);
+                    
+                    resultContainer.appendChild(listItem);
+                });
+            });
+        }
+
+        // TODO - fetch a configurable number of lines around the matched line (not the whole file)
+        function fetchFile(event, fileName, lineNumber) {
+            event.preventDefault();
+            const fileUrl = "/file?fileName=" + encodeURIComponent(fileName);
+            fetch(fileUrl).then(response => response.text()).then(fileLines => {
+                const fileContainer = document.getElementById("file-container");
+                fileContainer.innerHTML = "";
+                fileLines.split("\n").forEach((line, index) => {
+                    const lineBlock = document.createElement("div");
+                    const lineElement = document.createElement("span");
+                    lineElement.textContent = line;
+                    if (index + 1 === lineNumber) {
+                        lineElement.style.backgroundColor = "yellow";
+                    }
+                    lineBlock.appendChild(lineElement);
+                    fileContainer.appendChild(lineBlock);
+                });
+            });
+        }
+
+        function searchOnEnter(event) {
+            console.log("called");
+            if (event.key === "Enter") {
+                search();
+            }
+        }
+    </script>
+
+</html>
