@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/aaustinparker/file-indexer/file"
 	"github.com/aaustinparker/file-indexer/index"
@@ -38,7 +40,13 @@ func main() {
 }
 
 func searchIndex(w http.ResponseWriter, r *http.Request) {
+	// get search term from query params
 	searchTerm := r.URL.Query().Get("q")
+
+	if strings.TrimSpace(searchTerm) == "" {
+		http.Error(w, "Query parameter 'q' is required", http.StatusBadRequest)
+		return
+	}
 
 	documents, err := index.Search(*indexName, searchTerm)
 	if err != nil {
@@ -73,9 +81,16 @@ func renderPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func fetchFile(w http.ResponseWriter, r *http.Request) {
+	// get file and line number from query params
 	fileName := r.URL.Query().Get("fileName")
+	lineNumber, err := strconv.Atoi(r.URL.Query().Get("lineNumber"))
 
-	fileContent, err := file.Fetch(*dataDir, fileName)
+	if strings.TrimSpace(fileName) == "" || err != nil {
+		http.Error(w, "Valid file name and line number are required", http.StatusBadRequest)
+		return
+	}
+
+	fileContent, err := file.Fetch(*dataDir, fileName, lineNumber)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
 	} else {

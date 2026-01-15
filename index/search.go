@@ -2,17 +2,11 @@ package index
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/blevesearch/bleve/v2"
 )
 
 func Search(indexName string, searchTerm string) ([]Document, error) {
-	// get search term from query params
-	if strings.TrimSpace(searchTerm) == "" {
-		return nil, fmt.Errorf("Query parameter 'q' is required")
-	}
-
 	// open the index
 	index, err := bleve.Open(indexName)
 	if err != nil {
@@ -21,6 +15,7 @@ func Search(indexName string, searchTerm string) ([]Document, error) {
 	defer index.Close()
 
 	// perform search
+	// TODO - consider term query
 	query := bleve.NewWildcardQuery(fmt.Sprintf("*%s*", searchTerm))
 	query.FieldVal = "Text"
 	searchRequest := bleve.NewSearchRequest(query)

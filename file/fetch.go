@@ -1,24 +1,38 @@
 package file
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
-func Fetch(dataDir string, fileName string) (string, error) {
+const matchedLineBuffer int = 5
+
+func Fetch(dataDir string, fileName string, lineNumber int) (string, error) {
 	directoryPath, _ := filepath.Abs(dataDir)
 	filePath := filepath.Join(directoryPath, fileName)
 
-	// make sure file exists in the data directory
-	if _, err := os.Stat(filePath); err != nil {
+	file, err := os.Open(filePath)
+	if err != nil {
 		return "", fmt.Errorf("Can't open file at location %s: %v", filePath, err)
 	}
+	defer file.Close()
 
-	fileContent, err := os.ReadFile(filePath)
-	if err != nil {
-		return "", fmt.Errorf("Error reading file at location %s: %v", filePath, err)
+	scanner := bufio.NewScanner(file)
+	startLine := max(1, lineNumber-matchedLineBuffer)
+	endLine := lineNumber + matchedLineBuffer
+
+	currentLine := 1
+	var matchedLines strings.Builder
+	for scanner.Scan() && currentLine <= endLine {
+		if currentLine >= startLine {
+			lineText := scanner.Text()
+			fmt.Fprintf(&matchedLines, "%d.\t%s\n", currentLine, lineText)
+		}
+		currentLine++
 	}
 
-	return string(fileContent), nil
+	return matchedLines.String(), nil
 }

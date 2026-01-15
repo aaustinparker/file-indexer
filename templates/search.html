@@ -9,30 +9,32 @@
         <input type="text" id="search-input" placeholder="Enter search term" onkeydown="searchOnEnter(event)"/>
         <button onclick="search()">Search</button>
         <ul id="search-container"></ul>
+        <h3 id="file-header"></h3>
         <div id="file-container"></div>
     </body>
 
     <script>
+
         function search() {
+            hidePreviousContent();
             const searchTerm = document.getElementById("search-input").value;
             const searchUrl = "/search?q=" + encodeURIComponent(searchTerm);
             fetch(searchUrl).then(response => response.json()).then(results => {
                 const resultContainer = document.getElementById("search-container");
-                resultContainer.innerHTML = "";
                 results.forEach(result => {
                     const listItem = document.createElement("li");
                     
-                    const lineDescriptor = document.createElement("span");
-                    lineDescriptor.innerHTML = 
-                        `<a 
-                            href="#"
-                            onClick="fetchFile(event, '${result.FileName}', ${result.LineNumber})">
-                            ${result.FileName}:${result.LineNumber}
-                        </a>`;
-                    listItem.appendChild(lineDescriptor);
+                    const linkElement = document.createElement("a");
+                    linkElement.href = "#";
+                    linkElement.textContent = `${result.FileName}:${result.LineNumber}`;
+                    linkElement.onclick = (event) => fetchFile(event, result.FileName, result.LineNumber)
+                    
+                    const linkContainer = document.createElement("span");
+                    linkContainer.appendChild(linkElement);
+                    listItem.appendChild(linkContainer);
 
                     const lineText = document.createElement("span");
-                    lineText.textContent = ` - ${result.Text}`;
+                    lineText.textContent = `  ${result.Text}`;
                     listItem.appendChild(lineText);
                     
                     resultContainer.appendChild(listItem);
@@ -40,32 +42,57 @@
             });
         }
 
-        // TODO - fetch a configurable number of lines around the matched line (not the whole file)
         function fetchFile(event, fileName, lineNumber) {
             event.preventDefault();
-            const fileUrl = "/file?fileName=" + encodeURIComponent(fileName);
+            const fileUrl = `/file?fileName=${encodeURIComponent(fileName)}&lineNumber=${lineNumber}`;
             fetch(fileUrl).then(response => response.text()).then(fileLines => {
                 const fileContainer = document.getElementById("file-container");
+                const fileHeader = document.getElementById("file-header");
+                fileHeader.textContent = `File: ${fileName}`;
+                fileHeader.style.display = "block";
+
                 fileContainer.innerHTML = "";
                 fileLines.split("\n").forEach((line, index) => {
-                    const lineBlock = document.createElement("div");
                     const lineElement = document.createElement("span");
                     lineElement.textContent = line;
-                    if (index + 1 === lineNumber) {
-                        lineElement.style.backgroundColor = "yellow";
+                    lineElement.className = "file-line";
+                    if (line.startsWith(lineNumber + ".")) {
+                        lineElement.classList.add("highlighted-line");
                     }
+
+                    const lineBlock = document.createElement("div");
                     lineBlock.appendChild(lineElement);
                     fileContainer.appendChild(lineBlock);
                 });
             });
         }
 
+        function hidePreviousContent() {
+            const resultContainer = document.getElementById("search-container").innerHTML = "";
+            const fileContainer = document.getElementById("file-container").innerHTML = "";
+            const fileHeader = document.getElementById("file-header");
+            fileHeader.style.display = "none";
+        }
+
         function searchOnEnter(event) {
-            console.log("called");
             if (event.key === "Enter") {
                 search();
             }
         }
     </script>
+
+    <style>
+        #file-header {
+            display: none;
+            margin-top: 2em;
+        }
+        .file-line {
+            font-family: monospace;
+            white-space: pre;
+        }
+        .highlighted-line {
+            background-color: yellow;
+        }
+    </style>
 
 </html>
