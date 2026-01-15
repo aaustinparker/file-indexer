@@ -15,8 +15,7 @@ func Search(indexName string, searchTerm string) ([]Document, error) {
 	defer index.Close()
 
 	// perform search
-	// TODO - consider term query
-	query := bleve.NewWildcardQuery(fmt.Sprintf("*%s*", searchTerm))
+	query := bleve.NewTermQuery(searchTerm)
 	query.FieldVal = "Text"
 	searchRequest := bleve.NewSearchRequest(query)
 	searchRequest.Fields = []string{"*"}
