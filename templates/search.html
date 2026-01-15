@@ -8,9 +8,14 @@
         <h2>Search directory {{.DirectoryPath}}</h2>
         <input type="text" id="search-input" placeholder="Enter search term" onkeydown="searchOnEnter(event)"/>
         <button onclick="search()">Search</button>
-        <ul id="search-container"></ul>
-        <h3 id="file-header"></h3>
-        <div id="file-container"></div>
+        <div id="results-section">
+            <h3 id="results-header">Matches</h3>
+            <ul id="results-container"></ul>
+        </div>
+        <div id="file-section">
+            <h3 id="file-header">Selection</h3>
+            <div id="file-container"></div>
+        </div>
     </body>
 
     <script>
@@ -20,7 +25,9 @@
             const searchTerm = document.getElementById("search-input").value;
             const searchUrl = "/search?q=" + encodeURIComponent(searchTerm);
             fetch(searchUrl).then(response => response.json()).then(results => {
-                const resultContainer = document.getElementById("search-container");
+                document.getElementById("results-section").style.display = "block";
+                const resultContainer = document.getElementById("results-container");
+                resultContainer.innerHTML = "";
                 results.forEach(result => {
                     const listItem = document.createElement("li");
                     
@@ -46,11 +53,8 @@
             event.preventDefault();
             const fileUrl = `/file?fileName=${encodeURIComponent(fileName)}&lineNumber=${lineNumber}`;
             fetch(fileUrl).then(response => response.text()).then(fileLines => {
+                document.getElementById("file-section").style.display = "block";
                 const fileContainer = document.getElementById("file-container");
-                const fileHeader = document.getElementById("file-header");
-                fileHeader.textContent = `File: ${fileName}`;
-                fileHeader.style.display = "block";
-
                 fileContainer.innerHTML = "";
                 fileLines.split("\n").forEach((line, index) => {
                     const lineElement = document.createElement("span");
@@ -68,10 +72,8 @@
         }
 
         function hidePreviousContent() {
-            const resultContainer = document.getElementById("search-container").innerHTML = "";
-            const fileContainer = document.getElementById("file-container").innerHTML = "";
-            const fileHeader = document.getElementById("file-header");
-            fileHeader.style.display = "none";
+            document.getElementById("results-section").style.display = "none";
+            document.getElementById("file-section").style.display = "none";
         }
 
         function searchOnEnter(event) {
@@ -82,14 +84,16 @@
     </script>
 
     <style>
-        #file-header {
+    #results-section, #file-section {
             display: none;
             margin-top: 2em;
         }
+
         .file-line {
             font-family: monospace;
             white-space: pre;
         }
+
         .highlighted-line {
             background-color: yellow;
         }
